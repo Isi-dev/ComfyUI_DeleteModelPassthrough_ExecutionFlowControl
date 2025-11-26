@@ -618,64 +618,64 @@ class ControlledCLIPTextEncode:
 
 
 # Experimental Factory code
-def make_trigger_controlled_node(original_class, title_suffix=" (Controlled)", category="Memory Management"):
-    """
-    Creates a trigger-controlled wrapper class around any ComfyUI node class.
-    """
+# def make_trigger_controlled_node(original_class, title_suffix=" (Controlled)", category="Memory Management"):
+#     """
+#     Creates a trigger-controlled wrapper class around any ComfyUI node class.
+#     """
 
-    original_function_name = getattr(original_class, "FUNCTION", None)
-    if original_function_name is None:
-        raise ValueError(f"{original_class.__name__} does not define FUNCTION")
+#     original_function_name = getattr(original_class, "FUNCTION", None)
+#     if original_function_name is None:
+#         raise ValueError(f"{original_class.__name__} does not define FUNCTION")
 
-    # --------------------------
-    # 1. Build INPUT_TYPES wrapper
-    # --------------------------
-    @classmethod
-    def INPUT_TYPES(cls):
-        original_types = original_class.INPUT_TYPES()
+#     # --------------------------
+#     # 1. Build INPUT_TYPES wrapper
+#     # --------------------------
+#     @classmethod
+#     def INPUT_TYPES(cls):
+#         original_types = original_class.INPUT_TYPES()
 
-        # Insert trigger field
-        if "required" in original_types:
-            original_types["required"]["trigger"] = (any_typ, {"default": None})
-        else:
-            original_types["required"] = {"trigger": (any_typ, {"default": None})}
+#         # Insert trigger field
+#         if "required" in original_types:
+#             original_types["required"]["trigger"] = (any_typ, {"default": None})
+#         else:
+#             original_types["required"] = {"trigger": (any_typ, {"default": None})}
 
-        return original_types
+#         return original_types
 
-    # --------------------------
-    # 2. Wrapped FUNCTION method
-    # --------------------------
-    def wrapped_function(self, trigger, *args, **kwargs):
-        if trigger is None:
-            print(f"⏸️  {original_class.__name__} paused — no trigger received")
-            return (None,)
+#     # --------------------------
+#     # 2. Wrapped FUNCTION method
+#     # --------------------------
+#     def wrapped_function(self, trigger, *args, **kwargs):
+#         if trigger is None:
+#             print(f"⏸️  {original_class.__name__} paused — no trigger received")
+#             return (None,)
         
-        print(f"🚀 Executing {original_class.__name__}...")
-        original_fn = getattr(original_class, original_function_name)
-        return original_fn(self, *args, **kwargs)
+#         print(f"🚀 Executing {original_class.__name__}...")
+#         original_fn = getattr(original_class, original_function_name)
+#         return original_fn(self, *args, **kwargs)
 
-    # --------------------------
-    # 3. Build dynamic class attrs
-    # --------------------------
-    attrs = {
-        "INPUT_TYPES": INPUT_TYPES,
-        "FUNCTION": original_function_name,
-        original_function_name: wrapped_function,
-        "RETURN_TYPES": getattr(original_class, "RETURN_TYPES", ()),
-        "CATEGORY": category,
-        "TITLE": getattr(original_class, "TITLE", original_class.__name__ + title_suffix),
-    }
+#     # --------------------------
+#     # 3. Build dynamic class attrs
+#     # --------------------------
+#     attrs = {
+#         "INPUT_TYPES": INPUT_TYPES,
+#         "FUNCTION": original_function_name,
+#         original_function_name: wrapped_function,
+#         "RETURN_TYPES": getattr(original_class, "RETURN_TYPES", ()),
+#         "CATEGORY": category,
+#         "TITLE": getattr(original_class, "TITLE", original_class.__name__ + title_suffix),
+#     }
 
-    # Copy DESCRIPTION if present
-    if hasattr(original_class, "DESCRIPTION"):
-        attrs["DESCRIPTION"] = getattr(original_class, "DESCRIPTION")
+#     # Copy DESCRIPTION if present
+#     if hasattr(original_class, "DESCRIPTION"):
+#         attrs["DESCRIPTION"] = getattr(original_class, "DESCRIPTION")
 
-    # --------------------------
-    # 4. Create new class
-    # --------------------------
-    new_class_name = f"Controlled_{original_class.__name__}"
+#     # --------------------------
+#     # 4. Create new class
+#     # --------------------------
+#     new_class_name = f"Controlled_{original_class.__name__}"
 
-    return type(new_class_name, (original_class,), attrs)
+#     return type(new_class_name, (original_class,), attrs)
     
 # How to use 'Experimental Factory code':
 # ControlledUNETLoader = make_trigger_controlled_node(UNETLoader)
