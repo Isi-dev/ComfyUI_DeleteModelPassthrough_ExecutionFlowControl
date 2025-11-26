@@ -1,6 +1,7 @@
 import torch, gc, psutil
 import comfy.model_management as mm
 from comfy.model_management import loaded_models, free_memory, get_torch_device
+from comfy.comfy_types import IO
 from nodes import ControlNetLoader, VAELoader, UNETLoader, CLIPTextEncode
 from comfy_extras.nodes_model_patch import ModelPatchLoader
 
