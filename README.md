@@ -33,7 +33,7 @@ This is especially useful for **low VRAM & low RAM environments**, helping to re
 
 2. Clone or copy this repository into the folder:
   ```python
-  git clone https://github.com/Isi-dev/ComfyUI_DeleteModelPassthrough.git
+  git clone https://github.com/Isi-dev/ComfyUI_DeleteModelPassthrough_ExecutionFlowControl
   ```
 3. Install dependencies:
   ```python
