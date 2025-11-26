@@ -1,7 +1,7 @@
 import torch, gc, psutil
 import comfy.model_management as mm
 from comfy.model_management import loaded_models, free_memory, get_torch_device
-from nodes import ControlNetLoader, VAELoader
+from nodes import ControlNetLoader, VAELoader, UNETLoader, CLIPTextEncode
 from comfy_extras.nodes_model_patch import ModelPatchLoader
 
 try:
@@ -557,13 +557,138 @@ class ControlledModelPatchLoader:
         # Simply call the original class method
         return ModelPatchLoader.load_model_patch(self, *args, **kwargs)
 
+class ControlledUNETLoader:
+    @classmethod
+    def INPUT_TYPES(s):
+        # Get original input types and add trigger
+        original_types = UNETLoader.INPUT_TYPES()
+
+        if "required" in original_types:
+            original_types["required"]["trigger"] = (any_typ, {"default": None})
+        else:
+            original_types["required"] = {"trigger": (any_typ, {"default": None})}
+
+        return original_types
+
+    RETURN_TYPES = ("MODEL",)
+    FUNCTION = "load_unet"
+    CATEGORY = "Memory Management"
+    TITLE = "Controlled UNet Loader"
+
+    def load_unet(self, trigger, *args, **kwargs):
+        # Pause loading if no trigger received
+        if trigger is None:
+            print("⏸️  UNet loading paused — no trigger received")
+            return (None,)
+
+        print("🚀 Loading UNet...")
+
+        # Forward call to original loader
+        return UNETLoader.load_unet(self, *args, **kwargs)
+
+class ControlledCLIPTextEncode:
+    @classmethod
+    def INPUT_TYPES(s):
+        # Get original input types and add trigger
+        original_types = CLIPTextEncode.INPUT_TYPES()
+
+        if "required" in original_types:
+            original_types["required"]["trigger"] = (any_typ, {"default": None})
+        else:
+            original_types["required"] = {"trigger": (any_typ, {"default": None})}
+
+        return original_types
+
+    RETURN_TYPES = (IO.CONDITIONING,)
+    FUNCTION = "encode"
+    CATEGORY = "Memory Management"
+    TITLE = "Controlled CLIP Text Encode"
+    DESCRIPTION = "A trigger-controlled wrapper around CLIPTextEncode."
+
+    def encode(self, trigger, *args, **kwargs):
+        # Pause encoding if no trigger value given
+        if trigger is None:
+            print("⏸️  CLIP text encoding paused — no trigger received")
+            return (None,)
+
+        print("🚀 Encoding text with CLIP...")
+
+        # Forward to original class method
+        return CLIPTextEncode.encode(self, *args, **kwargs)
+
+
+# Experimental Factory code
+def make_trigger_controlled_node(original_class, title_suffix=" (Controlled)", category="Memory Management"):
+    """
+    Creates a trigger-controlled wrapper class around any ComfyUI node class.
+    """
+
+    original_function_name = getattr(original_class, "FUNCTION", None)
+    if original_function_name is None:
+        raise ValueError(f"{original_class.__name__} does not define FUNCTION")
+
+    # --------------------------
+    # 1. Build INPUT_TYPES wrapper
+    # --------------------------
+    @classmethod
+    def INPUT_TYPES(cls):
+        original_types = original_class.INPUT_TYPES()
+
+        # Insert trigger field
+        if "required" in original_types:
+            original_types["required"]["trigger"] = (any_typ, {"default": None})
+        else:
+            original_types["required"] = {"trigger": (any_typ, {"default": None})}
+
+        return original_types
+
+    # --------------------------
+    # 2. Wrapped FUNCTION method
+    # --------------------------
+    def wrapped_function(self, trigger, *args, **kwargs):
+        if trigger is None:
+            print(f"⏸️  {original_class.__name__} paused — no trigger received")
+            return (None,)
+        
+        print(f"🚀 Executing {original_class.__name__}...")
+        original_fn = getattr(original_class, original_function_name)
+        return original_fn(self, *args, **kwargs)
+
+    # --------------------------
+    # 3. Build dynamic class attrs
+    # --------------------------
+    attrs = {
+        "INPUT_TYPES": INPUT_TYPES,
+        "FUNCTION": original_function_name,
+        original_function_name: wrapped_function,
+        "RETURN_TYPES": getattr(original_class, "RETURN_TYPES", ()),
+        "CATEGORY": category,
+        "TITLE": getattr(original_class, "TITLE", original_class.__name__ + title_suffix),
+    }
+
+    # Copy DESCRIPTION if present
+    if hasattr(original_class, "DESCRIPTION"):
+        attrs["DESCRIPTION"] = getattr(original_class, "DESCRIPTION")
+
+    # --------------------------
+    # 4. Create new class
+    # --------------------------
+    new_class_name = f"Controlled_{original_class.__name__}"
+
+    return type(new_class_name, (original_class,), attrs)
+    
+# How to use 'Experimental Factory code':
+# ControlledUNETLoader = make_trigger_controlled_node(UNETLoader)
+
 
 NODE_CLASS_MAPPINGS = {
     "DeleteModelPassthroughLight": DeleteModelPassthroughLight,
     "DeleteModelPassthrough": DeleteModelPassthrough,
+    "ControlledUNETLoader": ControlledUNETLoader,
     "ControlledUnetLoaderGGUF": ControlledUnetLoaderGGUF,
     "ControlledControlNetLoader": ControlledControlNetLoader,
     "ControlledVAELoader": ControlledVAELoader,
+    "ControlledCLIPTextEncode": ControlledCLIPTextEncode,
     "ControlledModelPatchLoader": ControlledModelPatchLoader,
     "SmartClipDeleter": SmartClipDeleter
 }
@@ -571,9 +696,11 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "DeleteModelPassthroughLight": "Delete Model Light (Passthrough Any)",
     "DeleteModelPassthrough": "Delete Model (Passthrough Any)",
+    "ControlledUNETLoader": "Controlled Load Diffusion Model",
     "ControlledUnetLoaderGGUF": "Controlled UNet Loader (GGUF)",
     "ControlledControlNetLoader": "Controlled ControlNet Loader",
     "ControlledVAELoader": "Controlled VAE Loader",
+    "ControlledCLIPTextEncode": "Controlled CLIP Text Encode (Prompt)",
     "ControlledModelPatchLoader": "Controlled ModelPatch Loader",
     "SmartClipDeleter": "Smart CLIP Deleter (Auto-Detect)"
 }
