@@ -476,15 +476,13 @@ class ControlledControlNetLoader:
 class ControlledVAELoader:
     @classmethod
     def INPUT_TYPES(cls):
-        # Copy INPUT_TYPES from VAELoader and extend it
-        base = VAELoader.INPUT_TYPES(cls)
-        base = base.copy()
-        base["required"] = dict(base.get("required", {}))
+        # Get the original input types and add trigger
+        original_types = VAELoader.INPUT_TYPES()
+        original_types = original_types.copy()
+        original_types["required"] = dict(original_types.get("required", {}))
 
-        # Add execution trigger
-        base["required"]["trigger"] = (any_typ, {"default": None})
-
-        return base
+        original_types["required"]["trigger"] = (any_typ, {"default": None})
+        return original_types
 
     RETURN_TYPES = ("VAE",)
     FUNCTION = "load_vae"
@@ -492,12 +490,11 @@ class ControlledVAELoader:
     TITLE = "Controlled VAE Loader"
 
     def load_vae(self, vae_name, trigger=None):
-        # Delay execution if trigger is not provided
         if trigger is None:
             print("VAE loading paused - no trigger received")
             return (None,)
 
-        print(" Loading VAE...")
+        print("Loading VAE...")
         loader = VAELoader()
         return loader.load_vae(vae_name)
 
