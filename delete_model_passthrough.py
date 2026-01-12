@@ -470,33 +470,37 @@ class ControlledControlNetLoader:
         
         print(f"🚀 Loading ControlNet...")
         # Simply call the original class method
-        return ControlNetLoader.load_controlnet(*args, **kwargs)
+        return ControlNetLoader.load_controlnet(self, *args, **kwargs)
 
 
 class ControlledVAELoader:
     @classmethod
-    def INPUT_TYPES(s):
-        # Get the original input types and add trigger
-        original_types = VAELoader.INPUT_TYPES()
-        if "required" in original_types:
-            original_types["required"]["trigger"] = (any_typ, {"default": None})
-        else:
-            original_types["required"] = {"trigger": (any_typ, {"default": None})}
-        return original_types
+    def INPUT_TYPES(cls):
+        # Copy INPUT_TYPES from VAELoader and extend it
+        base = VAELoader.INPUT_TYPES(cls)
+        base = base.copy()
+        base["required"] = dict(base.get("required", {}))
+
+        # Add execution trigger
+        base["required"]["trigger"] = (any_typ, {"default": None})
+
+        return base
 
     RETURN_TYPES = ("VAE",)
     FUNCTION = "load_vae"
     CATEGORY = "Memory Management"
     TITLE = "Controlled VAE Loader"
 
-    def load_vae(self, trigger, *args, **kwargs):
+    def load_vae(self, vae_name, trigger=None):
+        # Delay execution if trigger is not provided
         if trigger is None:
-            print("⏸️  VAE loading paused - no trigger received")
+            print("VAE loading paused - no trigger received")
             return (None,)
-        
-        print(f"🚀 Loading VAE...")
-        # Simply call the original class method
-        return VAELoader.load_vae(*args, **kwargs)
+
+        print(" Loading VAE...")
+        loader = VAELoader()
+        return loader.load_vae(vae_name)
+
 
 
 class ControlledUnetLoaderGGUF:
@@ -529,7 +533,7 @@ class ControlledUnetLoaderGGUF:
         
         print(f"Loading UNet...")
         # Simply call the original class method
-        return UnetLoaderGGUF.load_unet(*args, **kwargs)
+        return UnetLoaderGGUF.load_unet(self, *args, **kwargs)
 
 
 class ControlledModelPatchLoader:
@@ -556,7 +560,7 @@ class ControlledModelPatchLoader:
         
         print(f"🚀 Loading Model Patch...")
         # Simply call the original class method
-        return ModelPatchLoader.load_model_patch(*args, **kwargs)
+        return ModelPatchLoader.load_model_patch(self, *args, **kwargs)
 
 class ControlledUNETLoader:
     @classmethod
@@ -585,7 +589,7 @@ class ControlledUNETLoader:
         print("🚀 Loading UNet...")
 
         # Forward call to original loader
-        return UNETLoader.load_unet(*args, **kwargs)
+        return UNETLoader.load_unet(self, *args, **kwargs)
 
 class ControlledCLIPTextEncode:
     @classmethod
@@ -615,7 +619,7 @@ class ControlledCLIPTextEncode:
         print("🚀 Encoding text with CLIP...")
 
         # Forward to original class method
-        return CLIPTextEncode.encode(*args, **kwargs)
+        return CLIPTextEncode.encode(self, *args, **kwargs)
 
 
 # Experimental Factory code
