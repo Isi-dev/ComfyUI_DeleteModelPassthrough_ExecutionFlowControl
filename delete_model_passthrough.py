@@ -470,7 +470,7 @@ class ControlledControlNetLoader:
         
         print(f"🚀 Loading ControlNet...")
         # Simply call the original class method
-        return ControlNetLoader.load_controlnet(self, *args, **kwargs)
+        return ControlNetLoader.load_controlnet(*args, **kwargs)
 
 
 class ControlledVAELoader:
@@ -496,7 +496,7 @@ class ControlledVAELoader:
         
         print(f"🚀 Loading VAE...")
         # Simply call the original class method
-        return VAELoader.load_vae(self, *args, **kwargs)
+        return VAELoader.load_vae(*args, **kwargs)
 
 
 class ControlledUnetLoaderGGUF:
@@ -529,7 +529,7 @@ class ControlledUnetLoaderGGUF:
         
         print(f"Loading UNet...")
         # Simply call the original class method
-        return UnetLoaderGGUF.load_unet(self, *args, **kwargs)
+        return UnetLoaderGGUF.load_unet(*args, **kwargs)
 
 
 class ControlledModelPatchLoader:
@@ -556,7 +556,7 @@ class ControlledModelPatchLoader:
         
         print(f"🚀 Loading Model Patch...")
         # Simply call the original class method
-        return ModelPatchLoader.load_model_patch(self, *args, **kwargs)
+        return ModelPatchLoader.load_model_patch(*args, **kwargs)
 
 class ControlledUNETLoader:
     @classmethod
@@ -585,7 +585,7 @@ class ControlledUNETLoader:
         print("🚀 Loading UNet...")
 
         # Forward call to original loader
-        return UNETLoader.load_unet(self, *args, **kwargs)
+        return UNETLoader.load_unet(*args, **kwargs)
 
 class ControlledCLIPTextEncode:
     @classmethod
@@ -615,7 +615,7 @@ class ControlledCLIPTextEncode:
         print("🚀 Encoding text with CLIP...")
 
         # Forward to original class method
-        return CLIPTextEncode.encode(self, *args, **kwargs)
+        return CLIPTextEncode.encode(*args, **kwargs)
 
 
 # Experimental Factory code
